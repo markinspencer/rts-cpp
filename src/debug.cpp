@@ -60,7 +60,7 @@ const std::vector<std::string> &DEBUG::GetMessages() const
     return messages;
 }
 
-void DEBUG::ClearScreenMessages()
+void DEBUG::ClearMessages()
 {
     messages.clear();
 }

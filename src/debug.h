@@ -13,7 +13,7 @@ public:
     ~DEBUG();
     void Print(char c[]);
     const std::vector<std::string> &GetMessages() const;
-    void ClearScreenMessages();
+    void ClearMessages();
     std::ofstream &operator<<(char c[]);
     std::ofstream &operator<<(int i);
     std::ofstream &operator<<(float f);
