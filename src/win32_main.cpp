@@ -6,7 +6,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, LPSTR lpCmdLine,
 {
     APPLICATION app;
 
-    if (FAILED(app.Init(hInstance, 800, 600, true)))
+    if (FAILED(app.Init(hInstance, 1280, 720, true)))
     {
         debug.Print("Application Init failed");
         return 0;
@@ -16,7 +16,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, LPSTR lpCmdLine,
     memset(&msg, 0, sizeof(MSG));
     int startTime = timeGetTime();
 
-    debug.Print("Entering gameloop");
+    debug.Print("Gameloop started");
     while (msg.message != WM_QUIT)
     {
         if (::PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
@@ -35,7 +35,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, LPSTR lpCmdLine,
             startTime = t;
         }
     }
-    debug.Print("Exited gameloop");
+    debug.Print("Gameloop stopped");
 
     app.Cleanup();
     return msg.wParam;

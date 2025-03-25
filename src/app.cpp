@@ -77,9 +77,18 @@ APPLICATION::Init(HINSTANCE hInstance, int width, int height, bool windowed)
     d3d9->Release();
 
     // Load Application Specific resources here...
-    D3DXCreateFont(m_pDevice, 20, 0, FW_NORMAL, 1, false,
-                   DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY,
-                   DEFAULT_PITCH, TEXT("Arial"), &m_pDebugFont);
+    D3DXCreateFont(m_pDevice,
+                   16,
+                   0,
+                   FW_THIN,
+                   1,
+                   false,
+                   DEFAULT_CHARSET,
+                   OUT_TT_PRECIS,   // Try OUT_TT_PRECIS instead
+                   DEFAULT_QUALITY, // Try this instead of DEFAULT_QUALITY
+                   DEFAULT_PITCH | FF_DONTCARE,
+                   TEXT("Source Sans Pro"), // Source Code Pro for monospacedry Consolas or other clear fonts
+                   &m_pDebugFont);
 
     debug.Print("Application successfully initialized");
     return S_OK;
