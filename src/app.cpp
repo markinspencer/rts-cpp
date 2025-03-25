@@ -1,19 +1,18 @@
-#include <windows.h>
-#include <d3dx9.h>
-#include "debug.h"
+
 #include "app.h"
 
 APPLICATION::APPLICATION()
 {
     m_pDevice = NULL;
     m_mainWindow = 0;
-    m_pFont = NULL;
+    m_pDebugFont = NULL;
+    m_debugMsg = nullptr;
 }
 
 HRESULT
 APPLICATION::Init(HINSTANCE hInstance, int width, int height, bool windowed)
 {
-    debug.Print("Application initialization started");
+    debug.Print("Starting application");
 
     WNDCLASS wc;
     memset(&wc, 0, sizeof(WNDCLASS));
@@ -78,10 +77,11 @@ APPLICATION::Init(HINSTANCE hInstance, int width, int height, bool windowed)
     d3d9->Release();
 
     // Load Application Specific resources here...
-    D3DXCreateFont(m_pDevice, 48, 0, FW_BOLD, 1, false,
+    D3DXCreateFont(m_pDevice, 20, 0, FW_NORMAL, 1, false,
                    DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY,
-                   DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &m_pFont);
+                   DEFAULT_PITCH, TEXT("Arial"), &m_pDebugFont);
 
+    debug.Print("Application successfully initialized");
     return S_OK;
 }
 
@@ -99,16 +99,22 @@ HRESULT APPLICATION::Render()
     // Begin the scene
     if (SUCCEEDED(m_pDevice->BeginScene()))
     {
-        // Render scene here...
-        RECT r = {0, 0, 800, 600};
+        // Display debug messages
+        const std::vector<std::string> &messages = debug.GetMessages();
+        RECT debugRect = {20, 20, 800, 600};
+        auto size = messages.size();
+        for (const auto &msg : messages)
+        {
+            m_pDebugFont->DrawTextA(NULL,
+                                    msg.c_str(),
+                                    -1,
+                                    &debugRect,
+                                    DT_LEFT | DT_TOP,
+                                    0xffffffff);
 
-        m_pFont->DrawText(NULL,
-                          TEXT("Hello World!"),
-                          -1,
-                          &r,
-                          DT_CENTER | DT_NOCLIP | DT_VCENTER,
-                          0xffffffff);
-
+            // Move down for the next message
+            debugRect.top += 20;
+        }
         m_pDevice->EndScene();
         m_pDevice->Present(0, 0, 0, 0);
     }
@@ -121,7 +127,7 @@ HRESULT APPLICATION::Cleanup()
     try
     {
         // Release all resources here...
-        m_pFont->Release();
+        m_pDebugFont->Release();
         m_pDevice->Release();
 
         debug.Print("Application terminated");
@@ -129,7 +135,6 @@ HRESULT APPLICATION::Cleanup()
     catch (...)
     {
     }
-    return S_OK;
     return S_OK;
 }
 

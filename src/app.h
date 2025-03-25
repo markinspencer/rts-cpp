@@ -17,6 +17,7 @@ public:
 
 private:
     IDirect3DDevice9 *m_pDevice;
-    ID3DXFont *m_pFont;
+    ID3DXFont *m_pDebugFont;
     HWND m_mainWindow;
+    char *m_debugMsg;
 };

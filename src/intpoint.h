@@ -1,7 +1,6 @@
 #ifndef _INTPOINT
 #define _INTPOINT
 
-#include <d3dx9.h>
 #include <math.h>
 #include "debug.h"
 

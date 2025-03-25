@@ -2,6 +2,8 @@
 
 std::ofstream out("debug.txt");
 
+DEBUG debug;
+
 DEBUG::DEBUG()
 {
 }
@@ -14,7 +16,11 @@ DEBUG::~DEBUG()
 
 void DEBUG::Print(char c[])
 {
+    messages.push_back(c);
     out << c << std::endl;
+
+    if (messages.size() > MAX_MESSAGES)
+        messages.erase(messages.begin());
 }
 std::ofstream &DEBUG::operator<<(char c[])
 {
@@ -48,4 +54,13 @@ void DEBUG::Endl(int nr)
 {
     for (int i = 0; i < nr; i++)
         out << std::endl;
+}
+const std::vector<std::string> &DEBUG::GetMessages() const
+{
+    return messages;
+}
+
+void DEBUG::ClearScreenMessages()
+{
+    messages.clear();
 }

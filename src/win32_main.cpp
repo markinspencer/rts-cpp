@@ -1,5 +1,6 @@
 #include <windows.h>
 #include "app.h"
+#include "debug.h"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -7,7 +8,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, LPSTR lpCmdLine,
 
     if (FAILED(app.Init(hInstance, 800, 600, true)))
     {
-        printf("failed init");
+        debug.Print("Application Init failed");
         return 0;
     }
 
@@ -15,6 +16,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, LPSTR lpCmdLine,
     memset(&msg, 0, sizeof(MSG));
     int startTime = timeGetTime();
 
+    debug.Print("Entering gameloop");
     while (msg.message != WM_QUIT)
     {
         if (::PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
@@ -33,6 +35,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, LPSTR lpCmdLine,
             startTime = t;
         }
     }
+    debug.Print("Exited gameloop");
 
     app.Cleanup();
     return msg.wParam;
