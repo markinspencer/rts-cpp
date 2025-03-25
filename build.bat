@@ -13,9 +13,8 @@ set "BUILD_DIR=.\build"
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 pushd "%BUILD_DIR%"
 
-rem Compile all cpp files in the src directory and link them.
-rem Also add /EHsc to enable exception handling.
-cl -Zi /EHsc /I"%DXSDK_INCLUDE%" "%SRC_DIR%\*.cpp" /link /LIBPATH:"%DXSDK_LIB%" d3dx9.lib d3d9.lib user32.lib winmm.lib
+rem Compile all cpp files in the src directory
+cl -Zi /EHsc /I"%DXSDK_INCLUDE%" "%SRC_DIR%\*.cpp" /Fewin32_main.exe /link /LIBPATH:"%DXSDK_LIB%" d3dx9.lib d3d9.lib user32.lib winmm.lib
 
 popd
 endlocal
