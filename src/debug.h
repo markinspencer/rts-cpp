@@ -23,7 +23,7 @@ public:
 
 private:
     std::vector<std::string> messages;
-    const size_t MAX_MESSAGES = 6
+    const size_t MAX_MESSAGES = 6;
 };
 
 extern DEBUG debug;
