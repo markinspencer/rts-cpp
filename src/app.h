@@ -22,10 +22,10 @@ private:
     IDirect3DDevice9 *m_pDevice;
     TERRAIN m_terrain;
 
-    int m_image, m_numPatches;
     float m_angle, m_radius;
     bool m_wireframe;
-    D3DLIGHT9 m_light;
+    DWORD m_time;
+    int m_fps, m_lastFps;
     HWND m_mainWindow;
     ID3DXFont *m_pFont;
 };

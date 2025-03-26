@@ -20,7 +20,7 @@ struct HEIGHTMAP
 
     // variables
     INTPOINT m_size;
-    float m_maxHeight;
+    float m_fMaxHeight;
     float *m_pHeightMap;
 };
 

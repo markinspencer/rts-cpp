@@ -1,6 +1,7 @@
 #ifndef _INTPOINT
 #define _INTPOINT
 
+#include <d3dx9.h>
 #include <math.h>
 #include "debug.h"
 
@@ -27,7 +28,6 @@ public:
 		x /= rhs;
 		y /= rhs;
 	}
-	INTPOINT operator*(const INTPOINT rhs) { return INTPOINT(x * rhs.x, y * rhs.y); }
 	INTPOINT operator/(const INTPOINT rhs) { return INTPOINT(x / rhs.x, y / rhs.y); }
 	INTPOINT operator/(const int d) { return INTPOINT(x / d, y / d); }
 	INTPOINT operator-(const INTPOINT &rhs) { return INTPOINT(x - rhs.x, y - rhs.y); }

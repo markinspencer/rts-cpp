@@ -21,7 +21,7 @@ HEIGHTMAP::HEIGHTMAP(INTPOINT _size, float _maxHeight)
     try
     {
         m_size = _size;
-        m_maxHeight = _maxHeight;
+        m_fMaxHeight = _maxHeight;
 
         m_pHeightMap = new float[m_size.x * m_size.y];
         memset(m_pHeightMap, 0, sizeof(float) * m_size.x * m_size.y);
@@ -42,12 +42,12 @@ void HEIGHTMAP::operator*=(const HEIGHTMAP &rhs)
     for (int y = 0; y < m_size.y; y++)
         for (int x = 0; x < m_size.x; x++)
         {
-            float a = m_pHeightMap[x + y * m_size.x] / m_maxHeight;
+            float a = m_pHeightMap[x + y * m_size.x] / m_fMaxHeight;
             float b = 1.0f;
             if (x <= rhs.m_size.x && y <= rhs.m_size.y)
-                b = rhs.m_pHeightMap[x + y * m_size.x] / rhs.m_maxHeight;
+                b = rhs.m_pHeightMap[x + y * m_size.x] / rhs.m_fMaxHeight;
 
-            m_pHeightMap[x + y * m_size.x] = a * b * m_maxHeight;
+            m_pHeightMap[x + y * m_size.x] = a * b * m_fMaxHeight;
         }
 }
 
@@ -85,7 +85,7 @@ HRESULT HEIGHTMAP::LoadFromFile(IDirect3DDevice9 *Device, char fileName[])
             for (int x = 0; x < m_size.x; x++)
             {
                 BYTE *b = bytes + y * sRect.Pitch + x;
-                m_pHeightMap[x + y * m_size.x] = (*b / 255.0f) * m_maxHeight;
+                m_pHeightMap[x + y * m_size.x] = (*b / 255.0f) * m_fMaxHeight;
             }
 
         // Unlock the texture
@@ -152,7 +152,7 @@ HRESULT HEIGHTMAP::CreateRandomHeightMap(int seed, float noiseSize, float persis
                 b = 255;
 
             // Save to heightMap
-            m_pHeightMap[x + y * m_size.x] = (b / 255.0f) * m_maxHeight;
+            m_pHeightMap[x + y * m_size.x] = (b / 255.0f) * m_fMaxHeight;
         }
 
     return S_OK;
@@ -164,10 +164,10 @@ void HEIGHTMAP::RaiseTerrain(RECT r, float f)
         for (int x = r.left; x <= r.right; x++)
         {
             m_pHeightMap[x + y * m_size.x] += f;
-            if (m_pHeightMap[x + y * m_size.x] < -m_maxHeight)
-                m_pHeightMap[x + y * m_size.x] = -m_maxHeight;
-            if (m_pHeightMap[x + y * m_size.x] > m_maxHeight)
-                m_pHeightMap[x + y * m_size.x] = m_maxHeight;
+            if (m_pHeightMap[x + y * m_size.x] < -m_fMaxHeight)
+                m_pHeightMap[x + y * m_size.x] = -m_fMaxHeight;
+            if (m_pHeightMap[x + y * m_size.x] > m_fMaxHeight)
+                m_pHeightMap[x + y * m_size.x] = m_fMaxHeight;
         }
 }
 
@@ -201,8 +201,7 @@ void HEIGHTMAP::SmoothTerrain()
 
 void HEIGHTMAP::Cap(float capHeight)
 {
-    // Cap terrain to capHeight
-    m_maxHeight = 0.0f;
+    m_fMaxHeight = 0.0f;
 
     for (int y = 0; y < m_size.y; y++)
         for (int x = 0; x < m_size.x; x++)
@@ -211,7 +210,7 @@ void HEIGHTMAP::Cap(float capHeight)
             if (m_pHeightMap[x + y * m_size.x] < 0.0f)
                 m_pHeightMap[x + y * m_size.x] = 0.0f;
 
-            if (m_pHeightMap[x + y * m_size.x] > m_maxHeight)
-                m_maxHeight = m_pHeightMap[x + y * m_size.x];
+            if (m_pHeightMap[x + y * m_size.x] > m_fMaxHeight)
+                m_fMaxHeight = m_pHeightMap[x + y * m_size.x];
         }
 }

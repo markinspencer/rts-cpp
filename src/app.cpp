@@ -7,9 +7,9 @@ APPLICATION::APPLICATION()
     m_mainWindow = 0;
     m_angle = 0.0f;
     m_radius = 100.0f;
-    m_image = 0;
     m_wireframe = false;
-    m_numPatches = 4;
+    m_fps = m_lastFps = 0;
+    m_time = GetTickCount();
 
     srand(GetTickCount());
 }
@@ -94,16 +94,6 @@ HRESULT APPLICATION::Init(HINSTANCE hInstance, int width, int height, bool windo
     // Create Terrain
     m_terrain.Init(m_pDevice, INTPOINT(100, 100));
 
-    // Create m_light
-    ::ZeroMemory(&m_light, sizeof(m_light));
-    m_light.Type = D3DLIGHT_DIRECTIONAL;
-    m_light.Ambient = D3DXCOLOR(0.5, 0.5, 0.5, 1.0f);
-    m_light.Diffuse = D3DXCOLOR(0.9, 0.9, 0.9, 1.0f);
-    m_light.Specular = D3DXCOLOR(0.5, 0.5, 0.5, 1.0f);
-    m_light.Direction = D3DXVECTOR3(0.0f, -1.0f, 0.0f);
-    m_pDevice->SetLight(0, &m_light);
-    m_pDevice->LightEnable(0, true);
-
     // Set sampler state
     m_pDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     m_pDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
@@ -134,54 +124,17 @@ HRESULT APPLICATION::Update(float deltaTime)
         m_wireframe = !m_wireframe;
         Sleep(300);
     }
-    else if (KEYDOWN('F'))
+    if (KEYDOWN(VK_SPACE))
     {
-        // Create terrain from file
-        m_image++;
-        if (m_image > 1)
-            m_image = 0;
-
-        if (m_terrain.m_pHeightMap != NULL)
-        {
-            m_terrain.m_pHeightMap->m_maxHeight = 10.0f;
-            if (m_image == 0)
-                m_terrain.m_pHeightMap->LoadFromFile(m_pDevice, "images/");
-            if (m_image == 1)
-                m_terrain.m_pHeightMap->LoadFromFile(m_pDevice, "images/");
-            m_terrain.CreatePatches(m_numPatches);
-        }
-
-        Sleep(300);
+        m_terrain.GenerateRandomTerrain(3);
     }
-    else if (KEYDOWN(VK_SPACE))
+    else if (KEYDOWN(VK_UP) && m_radius < 200.0f)
     {
-        // Generate random terrain
-        m_terrain.GenerateRandomTerrain(m_numPatches);
-        Sleep(300);
-    }
-    else if (KEYDOWN(VK_ADD) && m_radius < 200.0f)
-    {
-        // Zoom out
         m_radius += deltaTime * 30.0f;
     }
-    else if (KEYDOWN(VK_SUBTRACT) && m_radius > 5.0f)
+    else if (KEYDOWN(VK_DOWN) && m_radius > 5.0f)
     {
-        // Zoom in
         m_radius -= deltaTime * 30.0f;
-    }
-    else if (KEYDOWN(VK_UP) && m_numPatches < 8)
-    {
-        // Increase number of patches used
-        m_numPatches++;
-        m_terrain.CreatePatches(m_numPatches);
-        Sleep(300);
-    }
-    else if (KEYDOWN(VK_DOWN) && m_numPatches > 1)
-    {
-        // Decrease number of patches used
-        m_numPatches--;
-        m_terrain.CreatePatches(m_numPatches);
-        Sleep(300);
     }
 
     if (KEYDOWN(VK_ESCAPE))
@@ -195,6 +148,15 @@ HRESULT APPLICATION::Render()
     // Clear the viewport
     m_pDevice->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0xffffffff, 1.0f, 0L);
 
+    // FPS Calculation
+    m_fps++;
+    if (GetTickCount() - m_time > 1000)
+    {
+        m_lastFps = m_fps;
+        m_fps = 0;
+        m_time = GetTickCount();
+    }
+
     // Begin the scene
     if (SUCCEEDED(m_pDevice->BeginScene()))
     {
@@ -203,15 +165,19 @@ HRESULT APPLICATION::Render()
         else
             m_pDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
 
-        // Render terrain
         m_terrain.Render();
 
-        RECT r[] = {{10, 10, 0, 0}, {10, 30, 0, 0}, {10, 50, 0, 0}, {10, 70, 0, 0}, {10, 90, 0, 0}};
+        RECT r[] = {{10, 10, 0, 0}, {10, 30, 0, 0}, {10, 50, 0, 0}};
         m_pFont->DrawText(NULL, "W: Toggle Wireframe", -1, &r[0], DT_LEFT | DT_TOP | DT_NOCLIP, 0xff000000);
         m_pFont->DrawText(NULL, "+/-: Zoom In/Out", -1, &r[1], DT_LEFT | DT_TOP | DT_NOCLIP, 0xff000000);
-        m_pFont->DrawText(NULL, "SPACE: Randomize Terrain", -1, &r[2], DT_LEFT | DT_TOP | DT_NOCLIP, 0xff000000);
-        m_pFont->DrawText(NULL, "UP/DOWN: Increase/Decrease Number of Patches", -1, &r[3], DT_LEFT | DT_TOP | DT_NOCLIP, 0xff000000);
-        m_pFont->DrawText(NULL, "F: Load HeightMap from File", -1, &r[4], DT_LEFT | DT_TOP | DT_NOCLIP, 0xff000000);
+        m_pFont->DrawText(NULL, "Space: Randomize Terrain", -1, &r[2], DT_LEFT | DT_TOP | DT_NOCLIP, 0xff000000);
+
+        // FPS
+        char number[50];
+        std::string text = "FPS: ";
+        text += _itoa(m_lastFps, number, 10);
+        RECT rc = {630, 10, 0, 0};
+        m_pFont->DrawText(NULL, text.c_str(), -1, &rc, DT_LEFT | DT_TOP | DT_NOCLIP, 0xff000000);
 
         // End the scene.
         m_pDevice->EndScene();
