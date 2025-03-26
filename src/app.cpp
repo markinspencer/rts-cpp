@@ -1,12 +1,17 @@
 
+
+#pragma once
 #include "app.h"
+#include <d3dx9.h>
+#include "debug.h"
 
 APPLICATION::APPLICATION()
 {
     m_pDevice = NULL;
+    m_pHeightMap = NULL;
     m_mainWindow = 0;
-    m_pDebugFont = NULL;
-    m_debugMsg = nullptr;
+    m_angle = 0.0f;
+    m_angle_b = 0.5f;
 }
 
 HRESULT
@@ -88,7 +93,7 @@ APPLICATION::Init(HINSTANCE hInstance, int width, int height, bool windowed)
                    DEFAULT_QUALITY, // Try this instead of DEFAULT_QUALITY
                    DEFAULT_PITCH | FF_DONTCARE,
                    TEXT("Source Sans Pro"), // Source Code Pro for monospacedry Consolas or other clear fonts
-                   &m_pDebugFont);
+                   &m_pFont);
 
     debug.Print("Application successfully initialized");
     return S_OK;
@@ -96,34 +101,94 @@ APPLICATION::Init(HINSTANCE hInstance, int width, int height, bool windowed)
 
 HRESULT APPLICATION::Update(float deltaTime)
 {
+    // Create Heightmap
+    // Create Heightmap
+    if (m_pHeightMap == NULL)
+    {
+        // Create flat heightmap
+        m_pHeightMap = new HEIGHTMAP(m_pDevice, INTPOINT(50, 50));
+
+        if (FAILED(m_pHeightMap->CreateParticles()))
+        {
+            debug.Print("Failed to create particles");
+            Quit();
+        }
+    }
+    else
+    {
+        // Control camera
+        D3DXMATRIX matWorld, matView, matProj;
+        D3DXVECTOR2 centre = m_pHeightMap->GetCentre();
+        D3DXVECTOR3 Eye = D3DXVECTOR3(centre.x + cos(m_angle) * cos(m_angle_b) * centre.x * 1.5f,
+                                      sin(m_angle_b) * m_pHeightMap->m_maxHeight * 5.0f,
+                                      -centre.y + sin(m_angle) * cos(m_angle_b) * centre.y * 1.5f);
+
+        D3DXVECTOR3 Lookat = D3DXVECTOR3(centre.x, 0.0f, -centre.y);
+
+        D3DXMatrixIdentity(&matWorld);
+        D3DXMatrixLookAtLH(&matView, &Eye, &Lookat, &D3DXVECTOR3(0.0f, 1.0f, 0.0f));
+        float fov = 45.0f * (D3DX_PI / 180.0f);
+        D3DXMatrixPerspectiveFovLH(&matProj, fov, 1.3333f, 1.0f, 1000.0f);
+
+        m_pDevice->SetTransform(D3DTS_WORLD, &matWorld);
+        m_pDevice->SetTransform(D3DTS_VIEW, &matView);
+        m_pDevice->SetTransform(D3DTS_PROJECTION, &matProj);
+
+        // Move selection rectangle
+        if (KEYDOWN('W') && m_pHeightMap->m_selRect.left > 0)
+            m_pHeightMap->MoveRect(LEFT);
+        if (KEYDOWN('S') && m_pHeightMap->m_selRect.right < m_pHeightMap->m_size.x - 1)
+            m_pHeightMap->MoveRect(RIGHT);
+        if (KEYDOWN('D') && m_pHeightMap->m_selRect.top > 0)
+            m_pHeightMap->MoveRect(UP);
+        if (KEYDOWN('A') && m_pHeightMap->m_selRect.bottom < m_pHeightMap->m_size.y - 1)
+            m_pHeightMap->MoveRect(DOWN);
+
+        // Raise/Lower heightmap
+        if (KEYDOWN('E'))
+            m_pHeightMap->RaiseTerrain(m_pHeightMap->m_selRect, deltaTime * 3.0f);
+        if (KEYDOWN('R'))
+            m_pHeightMap->RaiseTerrain(m_pHeightMap->m_selRect, -deltaTime * 3.0f);
+
+        // Smooth Heightmap
+        if (KEYDOWN(VK_SPACE))
+            m_pHeightMap->SmoothTerrain();
+    }
+
     if (KEYDOWN(VK_ESCAPE))
         Quit();
+
+    // Rotate camera (more on cameras in Chapter 5)
+    if (KEYDOWN(VK_UP) && m_angle_b < D3DX_PI * 0.4f)
+        m_angle_b += deltaTime * 0.5f;
+    if (KEYDOWN(VK_DOWN) && m_angle_b > 0.1f)
+        m_angle_b -= deltaTime * 0.5f;
+    if (KEYDOWN(VK_LEFT))
+        m_angle -= deltaTime * 0.5f;
+    if (KEYDOWN(VK_RIGHT))
+        m_angle += deltaTime * 0.5f;
 
     return S_OK;
 }
 
 HRESULT APPLICATION::Render()
 {
+    // Clear the viewport
     m_pDevice->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00000000, 1.0f, 0L);
+
     // Begin the scene
     if (SUCCEEDED(m_pDevice->BeginScene()))
     {
-        // Display debug messages
-        const std::vector<std::string> &messages = debug.GetMessages();
-        RECT debugRect = {20, 20, 800, 600};
-        auto size = messages.size();
-        for (const auto &msg : messages)
-        {
-            m_pDebugFont->DrawTextA(NULL,
-                                    msg.c_str(),
-                                    -1,
-                                    &debugRect,
-                                    DT_LEFT | DT_TOP,
-                                    0xffffffff);
+        if (m_pHeightMap != NULL)
+            m_pHeightMap->Render();
 
-            // Move down for the next message
-            debugRect.top += 20;
-        }
+        RECT r[] = {{10, 10, 0, 0}, {10, 30, 0, 0}, {10, 50, 0, 0}, {10, 70, 0, 0}};
+        m_pFont->DrawText(NULL, "Arrows: Move Camera", -1, &r[0], DT_LEFT | DT_TOP | DT_NOCLIP, 0xffffffff);
+        m_pFont->DrawText(NULL, "W/A/S/D: Move Square", -1, &r[1], DT_LEFT | DT_TOP | DT_NOCLIP, 0xffffffff);
+        m_pFont->DrawText(NULL, "E/R: Raise/Lower Square", -1, &r[2], DT_LEFT | DT_TOP | DT_NOCLIP, 0xffffffff);
+        m_pFont->DrawText(NULL, "Space: Smooth Terrain", -1, &r[3], DT_LEFT | DT_TOP | DT_NOCLIP, 0xffffffff);
+
+        // End the scene.
         m_pDevice->EndScene();
         m_pDevice->Present(0, 0, 0, 0);
     }
@@ -135,8 +200,13 @@ HRESULT APPLICATION::Cleanup()
 {
     try
     {
-        // Release all resources here...
-        m_pDebugFont->Release();
+        if (m_pHeightMap != NULL)
+        {
+            delete m_pHeightMap;
+            m_pHeightMap = NULL;
+        }
+
+        m_pFont->Release();
         m_pDevice->Release();
 
         debug.Print("Application terminated");
@@ -144,6 +214,7 @@ HRESULT APPLICATION::Cleanup()
     catch (...)
     {
     }
+
     return S_OK;
 }
 

@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <d3dx9.h>
 #include "debug.h"
+#include "heightMap.h"
 
 #define KEYDOWN(vk_code) ((GetAsyncKeyState(vk_code) & 0x8000) ? 1 : 0)
 #define KEYUP(vk_code) ((GetAsyncKeyState(vk_code) & 0x8000) ? 0 : 1)
@@ -17,7 +18,9 @@ public:
 
 private:
     IDirect3DDevice9 *m_pDevice;
-    ID3DXFont *m_pDebugFont;
+    HEIGHTMAP *m_pHeightMap;
+
+    float m_angle, m_angle_b;
     HWND m_mainWindow;
-    char *m_debugMsg;
+    ID3DXFont *m_pFont;
 };
